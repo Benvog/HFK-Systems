@@ -2031,8 +2031,12 @@
     function clearSystemData() {
       if (!confirm('⚠️ WARNING: You are about to clear ALL data from the system.\n\nAre you absolutely sure? This action CANNOT be undone!')) return;
       if (!confirm('Final confirmation: Proceed with wiping all child records, reports, events, and cases?')) return;
-      const tables = ['caseplans','module_referrals','module_participation','module_family','module_protection','module_health','module_education','module_identity','reports','prog_events','programs','volunteers','materials','children','caseworkers'];
-      tables.forEach(t => _bg(supaFetch(t, 'DELETE', null, '?id=neq.none')));
+      // children table has integer id, others have text id
+      _bg(supaFetch('children', 'DELETE', null, '?id=gte.0'));
+      const textIdTables = ['caseplans','module_referrals','module_participation','module_family',
+        'module_protection','module_health','module_education','module_identity',
+        'reports','prog_events','programs','volunteers','materials','caseworkers'];
+      textIdTables.forEach(t => _bg(supaFetch(t, 'DELETE', null, '?id=neq.~')));
       Object.keys(_cache).forEach(k => _cache[k] = []);
       showAlert('All system data has been wiped.', 'error');
       renderDashboard();
