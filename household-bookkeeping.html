@@ -1,0 +1,1837 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Holistic Families Kenya - Household Bookkeeping System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --teal: #852C87;
+      --teal-light: #C33C91;
+      --teal-pale: #fcf8fd;
+      --red: #ef4444;
+      --navy: #0f172a;
+      --slate: #334155;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --card: rgba(255, 255, 255, 0.7);
+      --sidebar-w: 280px;
+      --grad-bg: linear-gradient(135deg, #fdfafc 0%, #f5eef6 100%);
+      --primary: #C33C91;
+      --primary-hover: #b03282;
+      --secondary: #F48B29;
+      --secondary-hover: #e07c23;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--grad-bg);
+      background-attachment: fixed;
+      color: var(--navy);
+      min-height: 100vh;
+    }
+
+    h1,
+    h2,
+    h3,
+    .topbar-title {
+      font-family: 'Outfit', sans-serif;
+      letter-spacing: -0.02em;
+    }
+
+    #sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+      box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+      overflow-y: auto;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-logo {
+      padding: 28px 24px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .sidebar-logo h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.15rem;
+      line-height: 1.2;
+      font-weight: 700;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .sidebar-logo span {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.7rem;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .nav-section {
+      padding: 16px 0 4px;
+    }
+
+    .nav-label {
+      padding: 0 24px 8px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      margin: 4px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.6);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      border-left: none;
+    }
+
+    .nav-item:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateX(4px);
+    }
+
+    .nav-item.active {
+      color: #fff;
+      background: linear-gradient(90deg, rgba(20, 184, 166, 0.2) 0%, rgba(20, 184, 166, 0.05) 100%);
+      margin-left: 20px;
+      position: relative;
+    }
+
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: -20px;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--teal-light);
+      border-radius: 0 4px 4px 0;
+    }
+
+    .nav-item .icon {
+      width: 18px;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    #main {
+      margin-left: var(--sidebar-w);
+      min-height: 100vh;
+    }
+
+    .topbar {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .topbar-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--navy);
+    }
+
+    .content {
+      padding: 28px 32px;
+    }
+
+    .section-card {
+      background: var(--card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .form-group label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--slate);
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.84rem;
+      font-family: 'Inter', sans-serif;
+      color: var(--navy);
+      background: #fff;
+      transition: border 0.15s;
+      outline: none;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--teal-light);
+      box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.12);
+    }
+
+    .form-group textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .form-span-2 {
+      grid-column: span 2;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: 'Inter', sans-serif;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--primary-hover), var(--primary));
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: var(--slate);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      z-index: 200;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 40px 20px;
+      overflow-y: auto;
+    }
+
+    .modal {
+      background: var(--card);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 1400px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+    }
+
+    .modal-header {
+      padding: 20px 28px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header h2 {
+      font-size: 1.15rem;
+    }
+
+    .modal-body {
+      padding: 24px 28px;
+    }
+
+    .modal-footer {
+      padding: 16px 28px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .close-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #f1f5f9;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+    }
+
+    .close-btn:hover {
+      background: #e2e8f0;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--muted);
+    }
+
+    .empty-state .icon {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+    }
+
+    .empty-state h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--slate);
+      font-family: 'Inter', sans-serif;
+      margin-bottom: 6px;
+    }
+
+    .empty-state p {
+      font-size: 0.82rem;
+    }
+
+    .alert {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      animation: slideIn 0.25s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .alert-success {
+      background: #052e16;
+      color: #bbf7d0;
+    }
+
+    .alert-error {
+      background: #450a0a;
+      color: #fecaca;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(120%);
+      }
+      to {
+        transform: translateX(0);
+      }
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    /* Bookkeeping Table Styles */
+    .bookkeeping-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    .bookkeeping-table th {
+      background: #f8fafc;
+      padding: 8px;
+      text-align: center;
+      font-weight: 600;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .bookkeeping-table td {
+      padding: 6px 8px;
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .bookkeeping-table td:first-child {
+      text-align: left;
+      font-weight: 600;
+      color: var(--navy);
+    }
+
+    .bookkeeping-table input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      text-align: center;
+      font-size: 0.8rem;
+      padding: 2px;
+      outline: none;
+    }
+
+    .bookkeeping-table input:focus {
+      background: #f0f9ff;
+      border-radius: 2px;
+    }
+
+    .balance-positive {
+      background: #dcfce7 !important;
+      color: #15803d;
+      font-weight: 600;
+    }
+
+    .balance-negative {
+      background: #fee2e2 !important;
+      color: #b91c1c;
+      font-weight: 600;
+    }
+
+    .balance-low {
+      background: #fef9c3 !important;
+      color: #a16207;
+      font-weight: 600;
+    }
+
+    .stat-card {
+      background: var(--card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 40px -10px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-num {
+      font-size: 1.8rem;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--navy);
+    }
+
+    .stat-label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 500;
+      margin-top: 3px;
+    }
+
+    .file-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .file-status.connected {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .file-status.disconnected {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    @media (max-width: 768px) {
+      #sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+      }
+
+      #main {
+        margin-left: 0;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-span-2 {
+        grid-column: span 1;
+      }
+
+      .content {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="sidebar">
+    <div class="sidebar-logo">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+          <circle cx="20" cy="20" r="20" fill="url(#logoGrad)"/>
+          <defs>
+            <linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#C33C91"/><stop offset="1" stop-color="#852C87"/>
+            </linearGradient>
+          </defs>
+          <path d="M20 30 C20 30 10 23 10 16.5 C10 13 12.5 10.5 15.5 10.5 C17.5 10.5 19 11.5 20 13 C21 11.5 22.5 10.5 24.5 10.5 C27.5 10.5 30 13 30 16.5 C30 23 20 30 20 30Z" fill="white" opacity="0.9"/>
+          <circle cx="20" cy="17" r="2.2" fill="#C33C91" opacity="0.7"/>
+        </svg>
+        <div>
+          <h1>Household Bookkeeping</h1>
+          <span>Supabase Cloud</span>
+        </div>
+      </div>
+    </div>
+    <nav style="flex:1; padding: 8px 0;">
+      <div class="nav-section">
+        <div class="nav-label">Main</div>
+        <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard"><span class="icon">📊</span>
+          Dashboard</div>
+        <div class="nav-item" onclick="showPage('families')" id="nav-families"><span class="icon">👨‍👩‍👧‍👦</span>
+          Families</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Bookkeeping</div>
+        <div class="nav-item" onclick="showPage('records')" id="nav-records"><span class="icon">📝</span>
+          Financial Records</div>
+        <div class="nav-item" onclick="showPage('reports')" id="nav-reports"><span class="icon">📈</span>
+          Reports & Analysis</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Data Management</div>
+        <div class="nav-item" onclick="showPage('import')" id="nav-import"><span class="icon">📥</span>
+          Import/Export</div>
+        <div class="nav-item" onclick="showPage('backup')" id="nav-backup"><span class="icon">💾</span>
+          Backup & Restore</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">System</div>
+        <div class="nav-item" onclick="clearAllData()" style="color: var(--red);"><span class="icon">🗑️</span> Clear All Data
+        </div>
+        <div class="nav-item" onclick="importFromCPCMS()" style="color:#F48B29;"><span class="icon">🔗</span> Import from CPCMS</div>
+      </div>
+    </nav>
+    <div style="padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.08);">
+      <div style="font-size: 0.72rem; color: rgba(255,255,255,0.3); line-height: 1.6;">
+        <div style="color: rgba(255,255,255,0.5); font-weight: 600; margin-bottom: 2px;">Data Storage</div>
+        Supabase Cloud Database
+        <div id="file-status" class="file-status disconnected" style="margin-top:4px;">
+          <span>⚠️</span> Files Not Loaded
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="main">
+
+    <!-- Dashboard Page -->
+    <div id="page-dashboard" class="page active">
+      <div class="topbar">
+        <div class="topbar-title">Household Bookkeeping Dashboard</div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button class="btn btn-secondary" onclick="loadDataFiles()">🔄 Reload Data</button>
+          <button class="btn btn-primary" onclick="saveDataFiles()">💾 Save All</button>
+        </div>
+      </div>
+      <div class="content">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;" id="stat-cards">
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;">
+          <div class="section-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+              <h3 style="font-size:0.95rem;font-family:'Inter',sans-serif;font-weight:700;">Recent Financial Records</h3>
+              <button class="btn btn-primary btn-sm" onclick="showPage('records')">View All</button>
+            </div>
+            <div id="recent-records"></div>
+          </div>
+          <div>
+            <div class="section-card">
+              <h3 style="font-size:0.95rem;font-weight:600;margin-bottom:12px;">💰 Financial Summary</h3>
+              <div id="financial-summary"></div>
+            </div>
+            <div class="section-card" style="margin-top:16px;">
+              <h3 style="font-size:0.95rem;font-weight:600;margin-bottom:12px;">🔔 Alerts</h3>
+              <div id="alerts-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Families Page -->
+    <div id="page-families" class="page">
+      <div class="topbar">
+        <div class="topbar-title">Family Management</div>
+        <button class="btn btn-primary" onclick="openFamilyModal()">+ Add Family</button>
+      </div>
+      <div class="content">
+        <div class="section-card">
+          <div id="families-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Records Page -->
+    <div id="page-records" class="page">
+      <div class="topbar">
+        <div class="topbar-title">Financial Records</div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <select id="record-family-filter" onchange="renderRecords()" style="border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.82rem;">
+            <option value="">All Families</option>
+          </select>
+          <select id="record-year-filter" onchange="renderRecords()" style="border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.82rem;">
+            <option value="">All Years</option>
+          </select>
+          <button class="btn btn-primary" onclick="openBookkeepingModal()">+ New Record</button>
+          <button class="btn btn-secondary" onclick="exportToExcel()">📊 Export</button>
+        </div>
+      </div>
+      <div class="content">
+        <div id="records-list"></div>
+      </div>
+    </div>
+
+    <!-- Reports Page -->
+    <div id="page-reports" class="page">
+      <div class="topbar">
+        <div class="topbar-title">Reports & Analysis</div>
+      </div>
+      <div class="content">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div class="section-card">
+            <h3 style="font-size:0.95rem;font-weight:600;margin-bottom:16px;">📈 Income vs Expenses Trend</h3>
+            <div id="income-expense-chart"></div>
+          </div>
+          <div class="section-card">
+            <h3 style="font-size:0.95rem;font-weight:600;margin-bottom:16px;">💰 Savings Growth</h3>
+            <div id="savings-chart"></div>
+          </div>
+        </div>
+        <div class="section-card" style="margin-top:20px;">
+          <h3 style="font-size:0.95rem;font-weight:600;margin-bottom:16px;">📊 Family Financial Rankings</h3>
+          <div id="family-rankings"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Import/Export Page -->
+    <div id="page-import" class="page">
+      <div class="topbar">
+        <div class="topbar-title">Import/Export Data</div>
+      </div>
+      <div class="content">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div class="section-card">
+            <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:16px;">📥 Import Data</h3>
+            <div class="form-group">
+              <label>Import from CPCMS</label>
+              <button class="btn btn-primary" onclick="importFromCPCMS()" style="width:100%;">Import Families from CPCMS</button>
+              <p style="font-size:0.78rem;color:var(--muted);margin-top:8px;">Import family data from Child Protection Case Management System</p>
+            </div>
+            <div class="form-group" style="margin-top:16px;">
+              <label>Upload JSON Files</label>
+              <input type="file" id="file-upload" accept=".json" multiple onchange="handleFileUpload(event)" style="width:100%;">
+              <p style="font-size:0.78rem;color:var(--muted);margin-top:8px;">Upload families.json and/or records.json files</p>
+            </div>
+          </div>
+          <div class="section-card">
+            <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:16px;">📤 Export Data</h3>
+            <div class="form-group">
+              <button class="btn btn-secondary" onclick="downloadFamilies()" style="width:100%;margin-bottom:8px;">📄 Download Families</button>
+              <button class="btn btn-secondary" onclick="downloadRecords()" style="width:100%;margin-bottom:8px;">📊 Download Records</button>
+              <button class="btn btn-primary" onclick="exportToExcel()" style="width:100%;">📈 Export to Excel</button>
+            </div>
+            <p style="font-size:0.78rem;color:var(--muted);margin-top:8px;">Download your data as JSON files or Excel spreadsheet</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Backup & Restore Page -->
+    <div id="page-backup" class="page">
+      <div class="topbar">
+        <div class="topbar-title">Backup & Restore</div>
+      </div>
+      <div class="content">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div class="section-card">
+            <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:16px;">💾 Create Backup</h3>
+            <div class="form-group">
+              <label>Backup Name</label>
+              <input type="text" id="backup-name" placeholder="e.g., Monthly Backup - May 2024" style="width:100%;">
+            </div>
+            <button class="btn btn-primary" onclick="createBackup()" style="width:100%;margin-top:12px;">Create Backup</button>
+            <p style="font-size:0.78rem;color:var(--muted);margin-top:8px;">Creates a timestamped backup of all your data</p>
+          </div>
+          <div class="section-card">
+            <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:16px;">🔄 Restore Backup</h3>
+            <div class="form-group">
+              <label>Upload Backup File</label>
+              <input type="file" id="backup-upload" accept=".json" onchange="restoreBackup(event)" style="width:100%;">
+            </div>
+            <p style="font-size:0.78rem;color:var(--muted);margin-top:8px;">Upload a previously created backup file to restore your data</p>
+          </div>
+        </div>
+        <div class="section-card" style="margin-top:20px;">
+          <h3 style="font-size:0.95rem;font-weight:600;margin-bottom:16px;">📋 Recent Backups</h3>
+          <div id="backup-list">
+            <p style="color:var(--muted);font-size:0.82rem;">No backups created yet</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Family Modal -->
+  <div id="family-modal" class="modal-overlay" style="display:none;">
+    <div class="modal" style="max-width:600px;">
+      <div class="modal-header">
+        <h2 id="family-modal-title">Add Family</h2>
+        <button class="close-btn" onclick="closeFamilyModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Family ID *</label>
+            <input type="text" id="family-id" placeholder="e.g., HFK/FAM/001/2024">
+          </div>
+          <div class="form-group">
+            <label>Primary Caregiver *</label>
+            <input type="text" id="family-caregiver" placeholder="Caregiver name">
+          </div>
+          <div class="form-group">
+            <label>Contact Phone</label>
+            <input type="tel" id="family-phone" placeholder="+254 XXX XXX XXX">
+          </div>
+          <div class="form-group">
+            <label>Location</label>
+            <input type="text" id="family-location" placeholder="County, Sub-county">
+          </div>
+          <div class="form-group">
+            <label>Household Size</label>
+            <input type="number" id="family-size" min="1" placeholder="Number of members">
+          </div>
+          <div class="form-group">
+            <label>Monthly Income Estimate</label>
+            <input type="number" id="family-income" min="0" placeholder="KES">
+          </div>
+          <div class="form-group form-span-2">
+            <label>Notes</label>
+            <textarea id="family-notes" placeholder="Additional family information..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeFamilyModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveFamily()">Save Family</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bookkeeping Modal -->
+  <div id="bookkeeping-modal" class="modal-overlay" style="display:none;">
+    <div class="modal" style="max-width:1400px;">
+      <div class="modal-header">
+        <h2 id="bk-modal-title">Household Bookkeeping Record</h2>
+        <button class="close-btn" onclick="closeBookkeepingModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Family *</label>
+            <select id="bk-family" required>
+              <option value="">Select Family</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Year *</label>
+            <input type="number" id="bk-year" min="2020" max="2030" required>
+          </div>
+          <div class="form-group form-span-2">
+            <label>Notes</label>
+            <textarea id="bk-notes" placeholder="General observations about family's financial situation..."></textarea>
+          </div>
+        </div>
+        
+        <div style="margin-top:24px;">
+          <h3 style="font-size:1rem;font-weight:600;margin-bottom:16px;color:var(--navy);">Monthly Financial Tracking</h3>
+          <div style="overflow-x:auto;">
+            <table class="bookkeeping-table">
+              <thead>
+                <tr>
+                  <th>Month</th>
+                  <th>Food</th>
+                  <th>Transport</th>
+                  <th>Hygiene</th>
+                  <th>School Fees</th>
+                  <th>Medical</th>
+                  <th>Rent</th>
+                  <th>Water</th>
+                  <th>Electricity/Gas</th>
+                  <th>Clothes</th>
+                  <th>Paying Debts</th>
+                  <th>Credits</th>
+                  <th>Insurance</th>
+                  <th>Borrowed</th>
+                  <th>Misc</th>
+                  <th>Donations</th>
+                  <th>Savings</th>
+                  <th>Earnings</th>
+                  <th>Total Expenses</th>
+                  <th>Total Income</th>
+                  <th>Balance</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody id="bk-monthly-data">
+                <!-- Monthly rows will be generated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeBookkeepingModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveBookkeepingRecord()">Save Record</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── Supabase config ──────────────────────────────────────────────
+    const SUPA_URL = 'https://ludisdwwdfcgwrdogetg.supabase.co';
+    const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1ZGlzZHd3ZGZjZ3dyZG9nZXRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODA0MTksImV4cCI6MjA5NDE1NjQxOX0.yhB2VyzO0PQuJkZ7p82v05s0S6gvyzxXYfPv0MGhWYI';
+
+    let familiesData = [];
+    let recordsData = [];
+    let dataLoaded = false;
+
+    async function supaFetch(table, method = 'GET', body = null, query = '', upsert = false) {
+      const headers = {
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + SUPA_KEY,
+        'Content-Type': 'application/json'
+      };
+      if (upsert) {
+        headers['Prefer'] = 'resolution=merge-duplicates,return=minimal';
+      } else if (method === 'POST' || method === 'PATCH') {
+        headers['Prefer'] = 'return=minimal';
+      }
+      const res = await fetch(`${SUPA_URL}/rest/v1/${table}${query}`, {
+        method, headers,
+        body: body ? JSON.stringify(body) : null
+      });
+      if (!res.ok) { console.error(`Supabase ${method} ${table}:`, await res.text()); return null; }
+      const text = await res.text();
+      return text ? JSON.parse(text) : null;
+    }
+
+    const DB = {
+      families: () => familiesData,
+      records: () => recordsData,
+      saveFamilies: (data) => { familiesData = data; },
+      saveRecords: (data) => { recordsData = data; },
+      getFamily: (id) => familiesData.find(f => f.id === id),
+      getFamilyRecords: (familyId) => recordsData.filter(r => r.family_id === familyId),
+      getRecord: (familyId, year) => recordsData.find(r => r.family_id === familyId && r.year == year)
+    };
+
+    async function loadDataFiles() {
+      showLoadingOverlay(true);
+      try {
+        const [families, records] = await Promise.all([
+          supaFetch('bk_families', 'GET', null, '?order=created_at.asc'),
+          supaFetch('bk_records', 'GET', null, '?order=created_at.asc')
+        ]);
+        familiesData = families || [];
+        recordsData  = records  || [];
+        dataLoaded = true;
+        updateFileStatus(true);
+        showAlert('Data loaded successfully');
+        renderDashboard();
+      } catch(e) {
+        console.error(e);
+        dataLoaded = false;
+        updateFileStatus(false);
+        showAlert('Error connecting to database', 'error');
+      }
+      showLoadingOverlay(false);
+    }
+
+    // Also pull CPCMS caregivers as importable families
+    function showLoadingOverlay(show) {
+      let el = document.getElementById('loading-overlay');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'loading-overlay';
+        el.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:9000;display:flex;align-items:center;justify-content:center;';
+        el.innerHTML = '<div style="background:#fff;border-radius:16px;padding:32px 48px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.2);"><div style="font-size:2rem;margin-bottom:12px;">⏳</div><div style="font-family:Outfit,sans-serif;font-weight:700;font-size:1.1rem;color:#0f172a;">Loading…</div></div>';
+        document.body.appendChild(el);
+      }
+      el.style.display = show ? 'flex' : 'none';
+    }
+
+    async function saveDataFiles() {
+      showAlert('Data is saved automatically to the database.');
+    }
+
+    function updateFileStatus(connected) {
+      const statusEl = document.getElementById('file-status');
+      if (connected) {
+        statusEl.className = 'file-status connected';
+        statusEl.innerHTML = '<span>✓</span> Files Loaded';
+      } else {
+        statusEl.className = 'file-status disconnected';
+        statusEl.innerHTML = '<span>⚠️</span> Files Not Loaded';
+      }
+    }
+
+    // Utility Functions
+    function uid() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+
+    function showAlert(message, type = 'success') {
+      const alert = document.createElement('div');
+      alert.className = `alert alert-${type}`;
+      alert.innerHTML = `
+        <span>${type === 'success' ? '✓' : '⚠'}</span>
+        <span>${message}</span>
+      `;
+      document.body.appendChild(alert);
+      setTimeout(() => alert.remove(), 3000);
+    }
+
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('en-KE', {
+        style: 'currency',
+        currency: 'KES',
+        minimumFractionDigits: 0
+      }).format(amount || 0);
+    }
+
+    // Page Navigation
+    function showPage(page) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById(`page-${page}`).classList.add('active');
+      document.getElementById(`nav-${page}`).classList.add('active');
+      
+      if (page === 'dashboard') renderDashboard();
+      else if (page === 'families') renderFamilies();
+      else if (page === 'records') renderRecords();
+      else if (page === 'reports') renderReports();
+    }
+
+    // Dashboard Functions
+    function renderDashboard() {
+      if (!dataLoaded) return;
+      
+      const families = DB.families();
+      const records = DB.records();
+      
+      // Calculate statistics
+      const totalFamilies = families.length;
+      const activeRecords = records.length;
+      const currentYear = new Date().getFullYear();
+      const thisYearRecords = records.filter(r => r.year == currentYear);
+      
+      // Calculate financial summary
+      let totalIncome = 0;
+      let totalExpenses = 0;
+      let totalSavings = 0;
+      
+      thisYearRecords.forEach(record => {
+        if (record.monthly_data) {
+          Object.values(record.monthly_data).forEach(month => {
+            totalIncome += parseFloat(month.earnings || 0) + parseFloat(month.donations || 0) + parseFloat(month.borrowed || 0) + parseFloat(month.credits || 0);
+            totalExpenses += parseFloat(month.food || 0) + parseFloat(month.transport || 0) + parseFloat(month.hygiene || 0) + 
+                           parseFloat(month.school_fees || 0) + parseFloat(month.medical || 0) + parseFloat(month.rent || 0) + 
+                           parseFloat(month.water || 0) + parseFloat(month.electricity_gas || 0) + parseFloat(month.clothes || 0) + 
+                           parseFloat(month.paying_debts || 0) + parseFloat(month.insurance || 0) + parseFloat(month.misc || 0);
+            totalSavings += parseFloat(month.savings || 0);
+          });
+        }
+      });
+
+      // Render stat cards
+      document.getElementById('stat-cards').innerHTML = `
+        <div class="stat-card">
+          <div class="stat-num">${totalFamilies}</div>
+          <div class="stat-label">Total Families</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">${activeRecords}</div>
+          <div class="stat-label">Financial Records</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">${formatCurrency(totalIncome)}</div>
+          <div class="stat-label">Total Income (${currentYear})</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">${formatCurrency(totalSavings)}</div>
+          <div class="stat-label">Total Savings (${currentYear})</div>
+        </div>
+      `;
+
+      // Render recent records
+      const recentRecords = records.slice(-5).reverse();
+      document.getElementById('recent-records').innerHTML = recentRecords.length ? recentRecords.map(record => {
+        const family = DB.getFamily(record.family_id);
+        return `
+          <div style="padding:12px 0;border-bottom:1px solid #f1f5f9;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <div style="font-weight:600;color:var(--navy);">${family ? family.caregiver : 'Unknown Family'}</div>
+                <div style="font-size:0.78rem;color:var(--muted);">${record.year} • ${family ? family.location : 'No location'}</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:0.82rem;color:var(--slate);">Last updated</div>
+                <div style="font-size:0.75rem;color:var(--muted);">${record.updated_at || 'Unknown'}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('') : '<div class="empty-state"><p>No financial records yet</p></div>';
+
+      // Render financial summary
+      const avgMonthlyIncome = totalIncome / 12;
+      const avgMonthlyExpenses = totalExpenses / 12;
+      const savingsRate = totalIncome > 0 ? (totalSavings / totalIncome * 100).toFixed(1) : 0;
+      
+      document.getElementById('financial-summary').innerHTML = `
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-size:0.78rem;color:var(--muted);">Avg Monthly Income</span>
+            <span style="font-weight:600;">${formatCurrency(avgMonthlyIncome)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-size:0.78rem;color:var(--muted);">Avg Monthly Expenses</span>
+            <span style="font-weight:600;">${formatCurrency(avgMonthlyExpenses)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span style="font-size:0.78rem;color:var(--muted);">Savings Rate</span>
+            <span style="font-weight:600;">${savingsRate}%</span>
+          </div>
+        </div>
+      `;
+
+      // Render alerts
+      const alerts = [];
+      families.forEach(family => {
+        const familyRecords = DB.getFamilyRecords(family.id);
+        const currentYearRecord = familyRecords.find(r => r.year == currentYear);
+        if (!currentYearRecord) {
+          alerts.push({
+            type: 'warning',
+            message: `${family.caregiver} - No ${currentYear} financial record`
+          });
+        }
+      });
+
+      document.getElementById('alerts-list').innerHTML = alerts.length ? alerts.map(alert => `
+        <div style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:0.82rem;">
+          <span style="color:var(--orange);">⚠️</span> ${alert.message}
+        </div>
+      `).join('') : '<div style="font-size:0.82rem;color:var(--muted);">No alerts</div>';
+    }
+
+    // Families Functions
+    function renderFamilies() {
+      if (!dataLoaded) return;
+      
+      const families = DB.families();
+      const records = DB.records();
+      
+      document.getElementById('families-list').innerHTML = families.length ? `
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;">
+            <thead>
+              <tr>
+                <th style="background:#f8fafc;padding:12px;text-align:left;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border);">Family ID</th>
+                <th style="background:#f8fafc;padding:12px;text-align:left;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border);">Caregiver</th>
+                <th style="background:#f8fafc;padding:12px;text-align:left;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border);">Location</th>
+                <th style="background:#f8fafc;padding:12px;text-align:left;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border);">Household Size</th>
+                <th style="background:#f8fafc;padding:12px;text-align:left;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border);">Monthly Income</th>
+                <th style="background:#f8fafc;padding:12px;text-align:left;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border);">Records</th>
+                <th style="background:#f8fafc;padding:12px;text-align:left;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border);">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${families.map(family => {
+                const familyRecords = DB.getFamilyRecords(family.id);
+                return `
+                  <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:12px;font-weight:600;color:var(--navy);">${family.id}</td>
+                    <td style="padding:12px;">${family.caregiver}</td>
+                    <td style="padding:12px;">${family.location || '—'}</td>
+                    <td style="padding:12px;">${family.household_size || '—'}</td>
+                    <td style="padding:12px;">${family.monthly_income ? formatCurrency(family.monthly_income) : '—'}</td>
+                    <td style="padding:12px;">${familyRecords.length} record(s)</td>
+                    <td style="padding:12px;">
+                      <div style="display:flex;gap:6px;">
+                        <button class="btn btn-primary btn-sm" onclick="openBookkeepingModalForFamily('${family.id}')">📝 Add Record</button>
+                        <button class="btn btn-secondary btn-sm" onclick="editFamily('${family.id}')">✏️</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteFamily('${family.id}')">🗑️</button>
+                      </div>
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      ` : '<div class="empty-state"><div class="icon">👨‍👩‍👧‍👦</div><h3>No Families Added</h3><p>Start by adding families to track their household finances</p></div>';
+    }
+
+    function openFamilyModal(familyId = null) {
+      const family = familyId ? DB.getFamily(familyId) : null;
+      document.getElementById('family-modal-title').textContent = family ? 'Edit Family' : 'Add Family';
+      
+      if (family) {
+        document.getElementById('family-id').value = family.id;
+        document.getElementById('family-caregiver').value = family.caregiver;
+        document.getElementById('family-phone').value = family.phone || '';
+        document.getElementById('family-location').value = family.location || '';
+        document.getElementById('family-size').value = family.household_size || '';
+        document.getElementById('family-income').value = family.monthly_income || '';
+        document.getElementById('family-notes').value = family.notes || '';
+      } else {
+        document.getElementById('family-id').value = '';
+        document.getElementById('family-caregiver').value = '';
+        document.getElementById('family-phone').value = '';
+        document.getElementById('family-location').value = '';
+        document.getElementById('family-size').value = '';
+        document.getElementById('family-income').value = '';
+        document.getElementById('family-notes').value = '';
+      }
+      
+      document.getElementById('family-modal').style.display = 'flex';
+    }
+
+    function closeFamilyModal() {
+      document.getElementById('family-modal').style.display = 'none';
+    }
+
+    async function saveFamily() {
+      const id = document.getElementById('family-id').value.trim();
+      const caregiver = document.getElementById('family-caregiver').value.trim();
+      
+      if (!id || !caregiver) { showAlert('Please fill in required fields', 'error'); return; }
+      
+      const existingIndex = familiesData.findIndex(f => f.id === id);
+      const familyData = {
+        id, caregiver,
+        phone: document.getElementById('family-phone').value.trim(),
+        location: document.getElementById('family-location').value.trim(),
+        household_size: parseInt(document.getElementById('family-size').value) || null,
+        monthly_income: parseFloat(document.getElementById('family-income').value) || null,
+        notes: document.getElementById('family-notes').value.trim()
+      };
+      
+      if (existingIndex >= 0) {
+        familiesData[existingIndex] = { ...familiesData[existingIndex], ...familyData };
+        await supaFetch('bk_families', 'PATCH', familyData, `?id=eq.${encodeURIComponent(id)}`);
+        showAlert('Family updated successfully');
+      } else {
+        familiesData.push(familyData);
+        await supaFetch('bk_families', 'POST', familyData, '?on_conflict=id', true);
+        showAlert('Family added successfully');
+      }
+      closeFamilyModal();
+      renderFamilies();
+    }
+
+    function editFamily(familyId) {
+      openFamilyModal(familyId);
+    }
+
+    async function deleteFamily(familyId) {
+      if (!confirm('Are you sure you want to delete this family and all their financial records?')) return;
+      familiesData = familiesData.filter(f => f.id !== familyId);
+      recordsData  = recordsData.filter(r => r.family_id !== familyId);
+      await supaFetch('bk_families', 'DELETE', null, `?id=eq.${encodeURIComponent(familyId)}`);
+      showAlert('Family deleted successfully');
+      renderFamilies();
+    }
+
+    // Bookkeeping Functions
+    function renderRecords() {
+      if (!dataLoaded) return;
+      
+      const families = DB.families();
+      const records = DB.records();
+      const familyFilter = document.getElementById('record-family-filter').value;
+      const yearFilter = document.getElementById('record-year-filter').value;
+      
+      // Update filter options
+      const familyFilterEl = document.getElementById('record-family-filter');
+      familyFilterEl.innerHTML = '<option value="">All Families</option>' + 
+        families.map(f => `<option value="${f.id}">${f.caregiver}</option>`).join('');
+      
+      const years = [...new Set(records.map(r => r.year))].sort((a, b) => b - a);
+      const yearFilterEl = document.getElementById('record-year-filter');
+      yearFilterEl.innerHTML = '<option value="">All Years</option>' + 
+        years.map(y => `<option value="${y}">${y}</option>`).join('');
+      
+      // Filter records
+      let filteredRecords = records;
+      if (familyFilter) filteredRecords = filteredRecords.filter(r => r.family_id === familyFilter);
+      if (yearFilter) filteredRecords = filteredRecords.filter(r => r.year == yearFilter);
+      
+      document.getElementById('records-list').innerHTML = filteredRecords.length ? `
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;">
+            <thead>
+              <tr>
+                <th style="background:#f8fafc;padding:12px;text-align:left;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border);">Family</th>
+                <th style="background:#f8fafc;padding:12px;text-align:left;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border);">Year</th>
+                <th style="background:#f8fafc;padding:12px;text-align:left;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border);">Total Income</th>
+                <th style="background:#f8fafc;padding:12px;text-align:left;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border);">Total Expenses</th>
+                <th style="background:#f8fafc;padding:12px;text-align:left;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border);">Net Balance</th>
+                <th style="background:#f8fafc;padding:12px;text-align:left;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border);">Last Updated</th>
+                <th style="background:#f8fafc;padding:12px;text-align:left;font-weight:600;color:var(--muted);border-bottom:2px solid var(--border);">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredRecords.map(record => {
+                const family = DB.getFamily(record.family_id);
+                let totalIncome = 0;
+                let totalExpenses = 0;
+                
+                if (record.monthly_data) {
+                  Object.values(record.monthly_data).forEach(month => {
+                    totalIncome += parseFloat(month.earnings || 0) + parseFloat(month.donations || 0) + parseFloat(month.borrowed || 0) + parseFloat(month.credits || 0);
+                    totalExpenses += parseFloat(month.food || 0) + parseFloat(month.transport || 0) + parseFloat(month.hygiene || 0) + 
+                                   parseFloat(month.school_fees || 0) + parseFloat(month.medical || 0) + parseFloat(month.rent || 0) + 
+                                   parseFloat(month.water || 0) + parseFloat(month.electricity_gas || 0) + parseFloat(month.clothes || 0) + 
+                                   parseFloat(month.paying_debts || 0) + parseFloat(month.insurance || 0) + parseFloat(month.misc || 0);
+                  });
+                }
+                
+                const balance = totalIncome - totalExpenses;
+                const balanceClass = balance >= 0 ? 'balance-positive' : 'balance-negative';
+                
+                return `
+                  <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:12px;font-weight:600;color:var(--navy);">${family ? family.caregiver : 'Unknown'}</td>
+                    <td style="padding:12px;">${record.year}</td>
+                    <td style="padding:12px;">${formatCurrency(totalIncome)}</td>
+                    <td style="padding:12px;">${formatCurrency(totalExpenses)}</td>
+                    <td style="padding:12px;"><span class="${balanceClass}">${formatCurrency(balance)}</span></td>
+                    <td style="padding:12px;">${record.updated_at || '—'}</td>
+                    <td style="padding:12px;">
+                      <div style="display:flex;gap:6px;">
+                        <button class="btn btn-primary btn-sm" onclick="viewBookkeepingRecord('${record.family_id}', ${record.year})">📊 View</button>
+                        <button class="btn btn-secondary btn-sm" onclick="editBookkeepingRecord('${record.family_id}', ${record.year})">✏️</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteBookkeepingRecord('${record.family_id}', ${record.year})">🗑️</button>
+                      </div>
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      ` : '<div class="empty-state"><div class="icon">📝</div><h3>No Financial Records</h3><p>Start tracking household finances by adding records</p></div>';
+    }
+
+    function openBookkeepingModal(familyId = null, year = null) {
+      if (!dataLoaded) {
+        showAlert('Please load data first', 'error');
+        return;
+      }
+      
+      const families = DB.families();
+      const familySelect = document.getElementById('bk-family');
+      
+      // Populate family options
+      familySelect.innerHTML = '<option value="">Select Family</option>' + 
+        families.map(f => `<option value="${f.id}" ${f.id === familyId ? 'selected' : ''}>${f.caregiver} (${f.id})</option>`).join('');
+      
+      // Set year
+      document.getElementById('bk-year').value = year || new Date().getFullYear();
+      
+      // Generate monthly data rows
+      generateMonthlyDataRows(familyId, year);
+      
+      document.getElementById('bookkeeping-modal').style.display = 'flex';
+    }
+
+    function openBookkeepingModalForFamily(familyId) {
+      openBookkeepingModal(familyId, new Date().getFullYear());
+    }
+
+    function generateMonthlyDataRows(familyId = null, year = null) {
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      const existingRecord = familyId && year ? DB.getRecord(familyId, year) : null;
+      const monthlyData = existingRecord ? existingRecord.monthly_data : {};
+      
+      let rowsHTML = '';
+      months.forEach((month, index) => {
+        const monthKey = month.toLowerCase();
+        const data = monthlyData[monthKey] || {};
+        
+        rowsHTML += `
+          <tr>
+            <td style="font-weight:600;color:var(--navy);padding:8px;">${month}</td>
+            <td style="padding:4px;"><input type="number" id="food-${index}" value="${data.food || ''}" onchange="calculateMonthlyTotals(${index})" min="0" step="0.01"></td>
+            <td style="padding:4px;"><input type="number" id="transport-${index}" value="${data.transport || ''}" onchange="calculateMonthlyTotals(${index})" min="0" step="0.01"></td>
+            <td style="padding:4px;"><input type="number" id="hygiene-${index}" value="${data.hygiene || ''}" onchange="calculateMonthlyTotals(${index})" min="0" step="0.01"></td>
+            <td style="padding:4px;"><input type="number" id="school_fees-${index}" value="${data.school_fees || ''}" onchange="calculateMonthlyTotals(${index})" min="0" step="0.01"></td>
+            <td style="padding:4px;"><input type="number" id="medical-${index}" value="${data.medical || ''}" onchange="calculateMonthlyTotals(${index})" min="0" step="0.01"></td>
+            <td style="padding:4px;"><input type="number" id="rent-${index}" value="${data.rent || ''}" onchange="calculateMonthlyTotals(${index})" min="0" step="0.01"></td>
+            <td style="padding:4px;"><input type="number" id="water-${index}" value="${data.water || ''}" onchange="calculateMonthlyTotals(${index})" min="0" step="0.01"></td>
+            <td style="padding:4px;"><input type="number" id="electricity_gas-${index}" value="${data.electricity_gas || ''}" onchange="calculateMonthlyTotals(${index})" min="0" step="0.01"></td>
+            <td style="padding:4px;"><input type="number" id="clothes-${index}" value="${data.clothes || ''}" onchange="calculateMonthlyTotals(${index})" min="0" step="0.01"></td>
+            <td style="padding:4px;"><input type="number" id="paying_debts-${index}" value="${data.paying_debts || ''}" onchange="calculateMonthlyTotals(${index})" min="0" step="0.01"></td>
+            <td style="padding:4px;"><input type="number" id="credits-${index}" value="${data.credits || ''}" onchange="calculateMonthlyTotals(${index})" min="0" step="0.01"></td>
+            <td style="padding:4px;"><input type="number" id="insurance-${index}" value="${data.insurance || ''}" onchange="calculateMonthlyTotals(${index})" min="0" step="0.01"></td>
+            <td style="padding:4px;"><input type="number" id="borrowed-${index}" value="${data.borrowed || ''}" onchange="calculateMonthlyTotals(${index})" min="0" step="0.01"></td>
+            <td style="padding:4px;"><input type="number" id="misc-${index}" value="${data.misc || ''}" onchange="calculateMonthlyTotals(${index})" min="0" step="0.01"></td>
+            <td style="padding:4px;"><input type="number" id="donations-${index}" value="${data.donations || ''}" onchange="calculateMonthlyTotals(${index})" min="0" step="0.01"></td>
+            <td style="padding:4px;"><input type="number" id="savings-${index}" value="${data.savings || ''}" onchange="calculateMonthlyTotals(${index})" min="0" step="0.01"></td>
+            <td style="padding:4px;"><input type="number" id="earnings-${index}" value="${data.earnings || ''}" onchange="calculateMonthlyTotals(${index})" min="0" step="0.01"></td>
+            <td style="padding:4px;background:#f8fafc;font-weight:600;" id="total-expenses-${index}">0</td>
+            <td style="padding:4px;background:#f8fafc;font-weight:600;" id="total-income-${index}">0</td>
+            <td style="padding:4px;background:#f8fafc;font-weight:600;" id="balance-${index}">0</td>
+            <td style="padding:4px;"><input type="text" id="notes-${index}" value="${data.notes || ''}" placeholder="Monthly notes..." style="width:120px;"></td>
+          </tr>
+        `;
+      });
+      
+      document.getElementById('bk-monthly-data').innerHTML = rowsHTML;
+      
+      // Calculate totals for all months
+      months.forEach((month, index) => {
+        calculateMonthlyTotals(index);
+      });
+    }
+
+    function calculateMonthlyTotals(monthIndex) {
+      // Expense categories
+      const expenses = [
+        'food', 'transport', 'hygiene', 'school_fees', 'medical', 'rent', 
+        'water', 'electricity_gas', 'clothes', 'paying_debts', 'insurance', 'misc'
+      ];
+      
+      // Income categories
+      const income = ['donations', 'savings', 'earnings', 'borrowed', 'credits'];
+      
+      let totalExpenses = 0;
+      let totalIncome = 0;
+      
+      // Calculate total expenses
+      expenses.forEach(category => {
+        const value = parseFloat(document.getElementById(`${category}-${monthIndex}`).value) || 0;
+        totalExpenses += value;
+      });
+      
+      // Calculate total income
+      income.forEach(category => {
+        const value = parseFloat(document.getElementById(`${category}-${monthIndex}`).value) || 0;
+        totalIncome += value;
+      });
+      
+      const balance = totalIncome - totalExpenses;
+      
+      // Update display
+      const expensesEl = document.getElementById(`total-expenses-${monthIndex}`);
+      const incomeEl = document.getElementById(`total-income-${monthIndex}`);
+      const balanceEl = document.getElementById(`balance-${monthIndex}`);
+      
+      if (expensesEl) expensesEl.textContent = formatCurrency(totalExpenses);
+      if (incomeEl) incomeEl.textContent = formatCurrency(totalIncome);
+      if (balanceEl) {
+        balanceEl.textContent = formatCurrency(balance);
+        balanceEl.className = balance >= 0 ? 'balance-positive' : 'balance-negative';
+        if (balance > 0 && balance < 1000) {
+          balanceEl.className = 'balance-low';
+        }
+      }
+    }
+
+    function closeBookkeepingModal() {
+      document.getElementById('bookkeeping-modal').style.display = 'none';
+    }
+
+    async function saveBookkeepingRecord() {
+      const familyId = document.getElementById('bk-family').value;
+      const year = parseInt(document.getElementById('bk-year').value);
+      const notes = document.getElementById('bk-notes').value.trim();
+      
+      if (!familyId || !year) { showAlert('Please select a family and year', 'error'); return; }
+      
+      const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+      const monthlyData = {};
+      months.forEach((month, index) => {
+        monthlyData[month] = {
+          food: parseFloat(document.getElementById(`food-${index}`).value) || 0,
+          transport: parseFloat(document.getElementById(`transport-${index}`).value) || 0,
+          hygiene: parseFloat(document.getElementById(`hygiene-${index}`).value) || 0,
+          school_fees: parseFloat(document.getElementById(`school_fees-${index}`).value) || 0,
+          medical: parseFloat(document.getElementById(`medical-${index}`).value) || 0,
+          rent: parseFloat(document.getElementById(`rent-${index}`).value) || 0,
+          water: parseFloat(document.getElementById(`water-${index}`).value) || 0,
+          electricity_gas: parseFloat(document.getElementById(`electricity_gas-${index}`).value) || 0,
+          clothes: parseFloat(document.getElementById(`clothes-${index}`).value) || 0,
+          paying_debts: parseFloat(document.getElementById(`paying_debts-${index}`).value) || 0,
+          credits: parseFloat(document.getElementById(`credits-${index}`).value) || 0,
+          insurance: parseFloat(document.getElementById(`insurance-${index}`).value) || 0,
+          borrowed: parseFloat(document.getElementById(`borrowed-${index}`).value) || 0,
+          misc: parseFloat(document.getElementById(`misc-${index}`).value) || 0,
+          donations: parseFloat(document.getElementById(`donations-${index}`).value) || 0,
+          savings: parseFloat(document.getElementById(`savings-${index}`).value) || 0,
+          earnings: parseFloat(document.getElementById(`earnings-${index}`).value) || 0,
+          notes: document.getElementById(`notes-${index}`).value.trim()
+        };
+      });
+      
+      const existingIndex = recordsData.findIndex(r => r.family_id === familyId && r.year == year);
+      const recordData = {
+        id: existingIndex >= 0 ? recordsData[existingIndex].id : uid(),
+        family_id: familyId,
+        year, notes, monthly_data: monthlyData,
+        updated_at: new Date().toISOString()
+      };
+      
+      if (existingIndex >= 0) {
+        recordsData[existingIndex] = { ...recordsData[existingIndex], ...recordData };
+        await supaFetch('bk_records', 'PATCH', recordData, `?id=eq.${recordData.id}`);
+        showAlert('Financial record updated successfully');
+      } else {
+        recordsData.push(recordData);
+        await supaFetch('bk_records', 'POST', recordData, '?on_conflict=id', true);
+        showAlert('Financial record saved successfully');
+      }
+      closeBookkeepingModal();
+      renderRecords();
+      renderDashboard();
+    }
+
+    function viewBookkeepingRecord(familyId, year) {
+      openBookkeepingModal(familyId, year);
+      // Make all inputs readonly for viewing
+      document.querySelectorAll('#bk-monthly-data input').forEach(input => {
+        input.readOnly = true;
+        input.style.background = '#f8fafc';
+      });
+    }
+
+    function editBookkeepingRecord(familyId, year) {
+      openBookkeepingModal(familyId, year);
+    }
+
+    async function deleteBookkeepingRecord(familyId, year) {
+      if (!confirm('Are you sure you want to delete this financial record?')) return;
+      const rec = recordsData.find(r => r.family_id === familyId && r.year == year);
+      recordsData = recordsData.filter(r => !(r.family_id === familyId && r.year == year));
+      if (rec) await supaFetch('bk_records', 'DELETE', null, `?id=eq.${rec.id}`);
+      showAlert('Financial record deleted successfully');
+      renderRecords();
+      renderDashboard();
+    }
+
+    // Import/Export Functions
+    async function importFromCPCMS() {
+      showLoadingOverlay(true);
+      const children = await supaFetch('children', 'GET', null, '?order=caregiver_primary.asc&limit=1000');
+      showLoadingOverlay(false);
+      if (!children || !children.length) {
+        showAlert('No children found in CPCMS database.', 'error');
+        return;
+      }
+      // Build unique caregivers map
+      const familiesMap = new Map();
+      children.forEach(child => {
+        if (!child.caregiver_primary) return;
+        const key = child.caregiver_primary;
+        if (!familiesMap.has(key)) {
+          familiesMap.set(key, {
+            id: 'FAM_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+            caregiver: child.caregiver_primary,
+            phone: child.caregiver_phone_primary || '',
+            location: child.location || '',
+            notes: `Imported from CPCMS — child: ${child.child_name}`
+          });
+        }
+      });
+      let imported = 0, skipped = 0, failed = 0;
+      for (const [key, newFamily] of familiesMap) {
+        const exists = familiesData.find(f => f.caregiver === key);
+        if (exists) { skipped++; continue; }
+        const result = await supaFetch('bk_families', 'POST', [newFamily], '?on_conflict=id', true);
+        if (result !== null) { familiesData.push(newFamily); imported++; }
+        else { failed++; console.error('Failed to save family:', key); }
+      }
+      if (imported > 0) {
+        showAlert(`Imported ${imported} family(s) from CPCMS${skipped > 0 ? `, ${skipped} already existed` : ''}`);
+        renderFamilies(); renderDashboard();
+      } else if (failed > 0) {
+        showAlert(`Failed to import. Check browser console (F12) for details.`, 'error');
+      } else {
+        showAlert(`All ${skipped} caregivers already exist in the system.`);
+      }
+    }
+
+    function handleFileUpload(event) {
+      const files = event.target.files;
+      
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          try {
+            const data = JSON.parse(e.target.result);
+            
+            if (file.name.includes('families')) {
+              const existingFamilies = DB.families();
+              const updatedFamilies = [...existingFamilies, ...data];
+              DB.saveFamilies(updatedFamilies);
+              showAlert(`Successfully imported ${data.length} families`);
+            } else if (file.name.includes('records')) {
+              const existingRecords = DB.records();
+              const updatedRecords = [...existingRecords, ...data];
+              DB.saveRecords(updatedRecords);
+              showAlert(`Successfully imported ${data.length} records`);
+            }
+            
+            renderDashboard();
+            
+          } catch (error) {
+            showAlert('Error reading file: ' + error.message, 'error');
+          }
+        };
+        reader.readAsText(file);
+      });
+    }
+
+    function downloadFamilies() {
+      const blob = new Blob([JSON.stringify(familiesData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url; link.download = 'families_backup.json'; link.click();
+      URL.revokeObjectURL(url);
+      showAlert('Families data downloaded as backup');
+    }
+
+    function downloadRecords() {
+      const blob = new Blob([JSON.stringify(recordsData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url; link.download = 'records_backup.json'; link.click();
+      URL.revokeObjectURL(url);
+      showAlert('Records data downloaded as backup');
+    }
+
+    function exportToExcel() {
+      const records = DB.records();
+      const families = DB.families();
+      
+      if (records.length === 0) {
+        showAlert('No data to export', 'error');
+        return;
+      }
+      
+      // Prepare data for export
+      const exportData = [];
+      
+      records.forEach(record => {
+        const family = DB.getFamily(record.family_id);
+        if (record.monthly_data) {
+          Object.entries(record.monthly_data).forEach(([month, data]) => {
+            exportData.push({
+              'Family ID': family ? family.id : record.family_id,
+              'Caregiver': family ? family.caregiver : 'Unknown',
+              'Location': family ? family.location : '',
+              'Year': record.year,
+              'Month': month.charAt(0).toUpperCase() + month.slice(1),
+              'Food': data.food || 0,
+              'Transport': data.transport || 0,
+              'Hygiene': data.hygiene || 0,
+              'School Fees': data.school_fees || 0,
+              'Medical': data.medical || 0,
+              'Rent': data.rent || 0,
+              'Water': data.water || 0,
+              'Electricity/Gas': data.electricity_gas || 0,
+              'Clothes': data.clothes || 0,
+              'Paying Debts': data.paying_debts || 0,
+              'Credits': data.credits || 0,
+              'Insurance': data.insurance || 0,
+              'Borrowed': data.borrowed || 0,
+              'Miscellaneous': data.misc || 0,
+              'Donations': data.donations || 0,
+              'Savings': data.savings || 0,
+              'Earnings': data.earnings || 0,
+              'Monthly Notes': data.notes || ''
+            });
+          });
+        }
+      });
+      
+      // Create workbook
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Household Bookkeeping');
+      
+      // Save file
+      XLSX.writeFile(wb, `Household_Bookkeeping_${new Date().toISOString().split('T')[0]}.xlsx`);
+      showAlert('Data exported successfully');
+    }
+
+    function createBackup() {
+      const backupName = document.getElementById('backup-name').value || `Backup_${new Date().toISOString().split('T')[0]}`;
+      const backupData = {
+        name: backupName,
+        created_at: new Date().toISOString(),
+        families: DB.families(),
+        records: DB.records()
+      };
+      
+      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${backupName.replace(/[^a-z0-9]/gi, '_')}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      
+      showAlert(`Backup "${backupName}" created successfully`);
+    }
+
+    function restoreBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const backupData = JSON.parse(e.target.result);
+          
+          if (backupData.families && backupData.records) {
+            DB.saveFamilies(backupData.families);
+            DB.saveRecords(backupData.records);
+            
+            showAlert(`Backup "${backupData.name}" restored successfully`);
+            renderDashboard();
+          } else {
+            showAlert('Invalid backup file format', 'error');
+          }
+        } catch (error) {
+          showAlert('Error restoring backup: ' + error.message, 'error');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // Reports Functions
+    function renderReports() {
+      if (!dataLoaded) return;
+      
+      // Simple text-based reports for now
+      const families = DB.families();
+      const records = DB.records();
+      
+      // Income vs Expense trend
+      const currentYear = new Date().getFullYear();
+      const currentYearRecords = records.filter(r => r.year == currentYear);
+      
+      let incomeData = [];
+      let expenseData = [];
+      
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      
+      months.forEach((month, index) => {
+        let monthIncome = 0;
+        let monthExpenses = 0;
+        
+        currentYearRecords.forEach(record => {
+          if (record.monthly_data && record.monthly_data[month.toLowerCase()]) {
+            const data = record.monthly_data[month.toLowerCase()];
+            monthIncome += parseFloat(data.earnings || 0) + parseFloat(data.donations || 0) + parseFloat(data.borrowed || 0) + parseFloat(data.credits || 0);
+            monthExpenses += parseFloat(data.food || 0) + parseFloat(data.transport || 0) + parseFloat(data.hygiene || 0) + 
+                            parseFloat(data.school_fees || 0) + parseFloat(data.medical || 0) + parseFloat(data.rent || 0) + 
+                            parseFloat(data.water || 0) + parseFloat(data.electricity_gas || 0) + parseFloat(data.clothes || 0) + 
+                            parseFloat(data.paying_debts || 0) + parseFloat(data.insurance || 0) + parseFloat(data.misc || 0);
+          }
+        });
+        
+        incomeData.push(monthIncome);
+        expenseData.push(monthExpenses);
+      });
+      
+      document.getElementById('income-expense-chart').innerHTML = `
+        <div style="font-size:0.82rem;">
+          ${months.map((month, index) => `
+            <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f1f5f9;">
+              <span>${month}</span>
+              <span>Income: ${formatCurrency(incomeData[index])} | Expenses: ${formatCurrency(expenseData[index])}</span>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      
+      // Family rankings
+      const familyRankings = families.map(family => {
+        const familyRecords = DB.getFamilyRecords(family.id);
+        let totalBalance = 0;
+        
+        familyRecords.forEach(record => {
+          if (record.monthly_data) {
+            Object.values(record.monthly_data).forEach(month => {
+              const income = parseFloat(month.earnings || 0) + parseFloat(month.donations || 0) + parseFloat(month.borrowed || 0) + parseFloat(month.credits || 0);
+              const expenses = parseFloat(month.food || 0) + parseFloat(month.transport || 0) + parseFloat(month.hygiene || 0) + 
+                              parseFloat(month.school_fees || 0) + parseFloat(month.medical || 0) + parseFloat(month.rent || 0) + 
+                              parseFloat(month.water || 0) + parseFloat(month.electricity_gas || 0) + parseFloat(month.clothes || 0) + 
+                              parseFloat(month.paying_debts || 0) + parseFloat(month.insurance || 0) + parseFloat(month.misc || 0);
+              totalBalance += (income - expenses);
+            });
+          }
+        });
+        
+        return { family, totalBalance };
+      }).sort((a, b) => b.totalBalance - a.totalBalance);
+      
+      document.getElementById('family-rankings').innerHTML = `
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
+            <thead>
+              <tr>
+                <th style="background:#f8fafc;padding:8px;text-align:left;font-weight:600;color:var(--muted);border:1px solid var(--border);">Rank</th>
+                <th style="background:#f8fafc;padding:8px;text-align:left;font-weight:600;color:var(--muted);border:1px solid var(--border);">Family</th>
+                <th style="background:#f8fafc;padding:8px;text-align:left;font-weight:600;color:var(--muted);border:1px solid var(--border);">Location</th>
+                <th style="background:#f8fafc;padding:8px;text-align:right;font-weight:600;color:var(--muted);border:1px solid var(--border);">Net Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${familyRankings.map((item, index) => `
+                <tr>
+                  <td style="padding:8px;font-weight:600;">${index + 1}</td>
+                  <td style="padding:8px;">${item.family.caregiver}</td>
+                  <td style="padding:8px;">${item.family.location || '—'}</td>
+                  <td style="padding:8px;text-align:right;font-weight:600;color:${item.totalBalance >= 0 ? '#16a34a' : '#dc2626'};">
+                    ${formatCurrency(item.totalBalance)}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+      
+      // Savings chart (simplified)
+      document.getElementById('savings-chart').innerHTML = `
+        <div style="font-size:0.82rem;">
+          <div style="padding:12px;background:#f8fafc;border-radius:8px;margin-bottom:12px;">
+            <div style="font-weight:600;margin-bottom:8px;">Total Savings This Year</div>
+            <div style="font-size:1.2rem;color:#16a34a;font-weight:700;">
+              ${formatCurrency(incomeData.reduce((a, b) => a + b, 0) - expenseData.reduce((a, b) => a + b, 0))}
+            </div>
+          </div>
+          <p style="color:var(--muted);font-size:0.78rem;">Savings represent the difference between total income and expenses across all families.</p>
+        </div>
+      `;
+    }
+
+    // Utility Functions
+    async function clearAllData() {
+      if (confirm('Are you sure you want to delete ALL data? This action cannot be undone.')) {
+        await supaFetch('bk_records', 'DELETE', null, '?id=neq.none');
+        await supaFetch('bk_families', 'DELETE', null, '?id=neq.none');
+        familiesData = [];
+        recordsData = [];
+        showAlert('All data cleared successfully');
+        renderDashboard();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadDataFiles();
+    });
+  </script>
+</body>
+
+</html>
