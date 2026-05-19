@@ -1565,7 +1565,8 @@
         return null;
       }
       const text = await res.text();
-      return text ? JSON.parse(text) : null;
+      if (!text || text.trim() === '') return true;
+      try { return JSON.parse(text); } catch { return true; }
     }
 
     // Strip any fields not in the children table to avoid Supabase rejecting the row

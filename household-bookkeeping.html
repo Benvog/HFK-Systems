@@ -907,7 +907,8 @@
       });
       if (!res.ok) { console.error(`Supabase ${method} ${table}:`, await res.text()); return null; }
       const text = await res.text();
-      return text ? JSON.parse(text) : null;
+      if (!text || text.trim() === '') return true; // 204 No Content = success
+      try { return JSON.parse(text); } catch { return true; }
     }
 
     const DB = {
