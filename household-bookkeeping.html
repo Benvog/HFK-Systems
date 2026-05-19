@@ -1520,30 +1520,39 @@
     // Import/Export Functions
     async function importFromCPCMS() {
       showLoadingOverlay(true);
-      const children = await supaFetch('children', 'GET', null, '?order=caregiver_primary.asc&limit=1000');
+      const [children, existingFamilies] = await Promise.all([
+        supaFetch('children', 'GET', null, '?order=caregiver_primary.asc&limit=1000'),
+        supaFetch('bk_families', 'GET', null, '?limit=1000')
+      ]);
       showLoadingOverlay(false);
       if (!children || !children.length) {
         showAlert('No children found in CPCMS database.', 'error');
         return;
       }
-      // Build unique caregivers map
+      // Reload local cache from Supabase first
+      if (existingFamilies) familiesData = existingFamilies;
+
+      // Build unique caregivers map — use stable ID based on caregiver name
       const familiesMap = new Map();
       children.forEach(child => {
         if (!child.caregiver_primary) return;
-        const key = child.caregiver_primary;
+        const key = child.caregiver_primary.trim();
         if (!familiesMap.has(key)) {
+          // Stable ID: hash of caregiver name so same person always gets same ID
+          const stableId = 'FAM_' + key.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 20);
           familiesMap.set(key, {
-            id: 'FAM_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
-            caregiver: child.caregiver_primary,
+            id: stableId,
+            caregiver: key,
             phone: child.caregiver_phone_primary || '',
             location: child.location || '',
-            notes: `Imported from CPCMS — child: ${child.child_name}`
+            notes: `Imported from CPCMS`
           });
         }
       });
+
       let imported = 0, skipped = 0, failed = 0;
       for (const [key, newFamily] of familiesMap) {
-        const exists = familiesData.find(f => f.caregiver === key);
+        const exists = familiesData.find(f => f.id === newFamily.id || f.caregiver === key);
         if (exists) { skipped++; continue; }
         const result = await supaFetch('bk_families', 'POST', [newFamily], '?on_conflict=id', true);
         if (result !== null) { familiesData.push(newFamily); imported++; }
