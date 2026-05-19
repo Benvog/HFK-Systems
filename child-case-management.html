@@ -3042,15 +3042,17 @@
               const newChild = {
                 child_id: norm.childid || norm.id || norm.caseid || (`HFK/CW/EXC-${Math.floor(Math.random() * 10000)}/${new Date().getFullYear()}`),
                 child_name: childName,
-                dob: norm.dob || norm.dateofbirth || norm.birthdate || norm.age || '',
+                dob: norm.dateofbirth || norm.dob || norm.birthdate || '',
+                enrollment_age: norm.enrollmentage || norm.age || '',
                 gender: norm.gender || norm.sex || '',
                 case_status: norm.casestatus || norm.status || 'Active',
                 location: norm.location || norm.address || norm.city || norm.county || '',
                 caseworker: norm.caseworker || norm.socialworker || norm.assignedto || '',
-                caregiver_primary: norm.caregiver || norm.caregiverprimary || norm.parent || norm.guardian || '',
-                caregiver_contact: norm.caregivercontact || norm.phone || norm.contact || norm.caregiverphone || '',
-                referral_source: norm.referralsource || norm.referral || norm.referredby || '',
-                date_enrolled: norm.dateenrolled || norm.enrollmentdate || new Date().toISOString().split('T')[0]
+                caregiver_primary: norm.caregivername || norm.caregiver || norm.caregiverprimary || norm.parent || norm.guardian || norm.caretaker || '',
+                caregiver_phone_primary: norm.caregivercontact || norm.caregiverphone || norm.phone || norm.contact || '',
+                relationship: norm.relationshiptochild || norm.relationship || '',
+                referral_source: norm.refferalsource || norm.referralsource || norm.referral || norm.referredby || '',
+                date_enrolled: norm.dateenrolled || norm.enrollmentdate || norm.dateenrollment || ''
               };
               if (!children.find(c => c.child_id === newChild.child_id)) {
                 children.push(newChild);
